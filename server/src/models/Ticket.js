@@ -16,7 +16,7 @@ category: { type: String, enum: ['bug', 'billing', 'how_to', 'feature_request', 
   primaryAssigneeId: { type: mongoose.Schema.Types.ObjectId, ref: 'User',default: null },
   collaboratorIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   reopenedAt: { type: Date, default: null },
-
+  acknowledgedAlertAt: { type: Date, default: null },
   firstResponseTargetMinutes: { type: Number, required: true },
   pendingSince: { type: Date, default: null },
   totalPausedMs: { type: Number, default: 0 },
