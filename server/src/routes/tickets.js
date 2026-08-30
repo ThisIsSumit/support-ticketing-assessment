@@ -46,9 +46,49 @@ router.get('/mine',asyncHandler (async (req, res) => {
 // (Flagging this as a decision to record: agents can *see* the whole shared
 // queue, matching "one shared queue that replaces the group inbox" in the
 // brief, but can only *act* on their own tickets.)
+const PRIORITY_ORDER = { urgent: 4, high: 3, medium: 2, low: 1 };
+const SORTABLE_FIELDS = { createdAt: 'createdAt', updatedAt: 'updatedAt' }; // priority sorted separately below
+
 router.get('/', asyncHandler(async (req, res) => {
-  const tickets = await Ticket.find({ archivedAt: null }).sort({ createdAt: -1 }).limit(50);
-  res.json(tickets); // real filter/sort/pagination arrives in session 4
+  const {
+    q, status, priority, category, assignee,
+    sortBy = 'createdAt', sortDir = 'desc',
+    page = '1', pageSize = '20',
+  } = req.query;
+
+  const filter = { archivedAt: null };
+  if (status) filter.status = status;
+  if (priority) filter.priority = priority;
+  if (category) filter.category = category;
+  if (assignee === 'unassigned') filter.primaryAssigneeId = null;
+  else if (assignee) filter.primaryAssigneeId = assignee;
+  if (q) filter.$text = { $search: q };
+
+  const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+  const size = Math.min(Math.max(parseInt(pageSize, 10) || 20, 1), 100); // cap to stop abuse
+  const dir = sortDir === 'asc' ? 1 : -1;
+
+  const total = await Ticket.countDocuments(filter);
+
+  let query = Ticket.find(filter);
+
+  if (sortBy === 'priority') {
+    // Mongo can't sort by a JS object map, so we sort in-memory for this one case.
+    // Fine at demo scale; noted in schema.md as something that needs an aggregation
+    // pipeline with $switch (or a stored numeric priorityRank field) at real scale.
+    const all = await query.lean();
+    all.sort((a, b) => dir * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]));
+    const paged = all.slice((pageNum - 1) * size, pageNum * size);
+    return res.json({ tickets: paged, total, page: pageNum, pageSize: size });
+  }
+
+  const sortField = SORTABLE_FIELDS[sortBy] || 'createdAt';
+  const tickets = await query
+    .sort({ [sortField]: dir })
+    .skip((pageNum - 1) * size)
+    .limit(size);
+
+  res.json({ tickets, total, page: pageNum, pageSize: size });
 }));
 
 router.get('/:id', loadTicket, requireTicketAccess, asyncHandler(async (req, res) => {
