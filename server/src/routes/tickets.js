@@ -8,6 +8,7 @@ const { TARGET_MINUTES_BY_PRIORITY } = require('../constants/sla');
 const { CATEGORIES } = require('../constants/categories');
 const asyncHandler = require('../middleware/asyncHandler');
 const { applyStatusChange } = require('../services/ticketStatus');
+const { buildTicketFilter } = require('../services/ticketQuery');
 const router = express.Router();
 router.use(requireAuth);
 
@@ -42,6 +43,94 @@ router.get('/mine',asyncHandler (async (req, res) => {
   res.json(tickets);
 }));
 
+
+
+// Bulk reassign — supervisor only, matching the single-ticket rule.
+router.post('/bulk/reassign', requireRole('supervisor'), asyncHandler(async (req, res) => {
+  const { ticketIds, newAssigneeId } = req.body;
+  const results = [];
+
+  for (const id of ticketIds) {
+    try {
+      const ticket = await Ticket.findById(id);
+      if (!ticket) {
+        results.push({ ticketId: id, success: false, reason: 'Ticket not found' });
+        continue;
+      }
+      const fromValue = ticket.primaryAssigneeId?.toString() || null;
+      const wasUnassigned = ticket.status === 'New';
+      ticket.primaryAssigneeId = newAssigneeId;
+      if (wasUnassigned) ticket.status = 'Open';
+      await ticket.save();
+
+      await TicketEvent.create({
+        ticketId: ticket._id, type: 'reassignment', actorId: req.user.sub,
+        fromValue, toValue: newAssigneeId,
+      });
+      if (wasUnassigned) {
+        await TicketEvent.create({
+          ticketId: ticket._id, type: 'status_change', actorId: req.user.sub,
+          fromValue: 'New', toValue: 'Open',
+        });
+      }
+      results.push({ ticketId: id, success: true });
+    } catch (err) {
+      results.push({ ticketId: id, success: false, reason: err.message });
+    }
+  }
+  res.json({ results });
+}));
+
+// Bulk close — reuses the same transition engine as the single-ticket status
+// endpoint, so a ticket not currently in Resolved is rejected per-ticket with
+// the real reason, not silently skipped or failing the whole batch.
+router.post('/bulk/close', asyncHandler(async (req, res) => {
+  const { ticketIds } = req.body;
+  const results = [];
+
+  for (const id of ticketIds) {
+    try {
+      const ticket = await Ticket.findById(id);
+      if (!ticket) {
+        results.push({ ticketId: id, success: false, reason: 'Ticket not found' });
+        continue;
+      }
+      const { role, sub } = req.user;
+      const isAssignee = ticket.primaryAssigneeId?.equals(sub) ?? false;
+      const isCollaborator = ticket.collaboratorIds.some((cid) => cid.equals(sub));
+      if (role !== 'supervisor' && !isAssignee && !isCollaborator) {
+        results.push({ ticketId: id, success: false, reason: 'Not assigned to or collaborating on this ticket' });
+        continue;
+      }
+
+      const eventData = applyStatusChange(ticket, 'Closed', req.user.sub);
+      await ticket.save();
+      await TicketEvent.create(eventData);
+      results.push({ ticketId: id, success: true });
+    } catch (err) {
+      results.push({ ticketId: id, success: false, reason: err.message });
+    }
+  }
+  res.json({ results });
+}));
+
+// CSV export of the currently filtered queue — same filter contract as GET /.
+router.get('/export', asyncHandler(async (req, res) => {
+  const filter = buildTicketFilter(req.query);
+  const tickets = await Ticket.find(filter).sort({ createdAt: -1 });
+
+  const header = ['Subject', 'Status', 'Priority', 'Category', 'Requester', 'Assignee', 'Created'];
+  const escape = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+  const rows = tickets.map((t) => [
+    t.subject, t.status, t.priority, t.category, t.requesterEmail,
+    t.primaryAssigneeId?.toString() || 'Unassigned', t.createdAt.toISOString(),
+  ].map(escape).join(','));
+
+  const csv = [header.map(escape).join(','), ...rows].join('\n');
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="tickets-export.csv"');
+  res.send(csv);
+}));
 // Full queue — read access for everyone; write access is what's restricted.
 // (Flagging this as a decision to record: agents can *see* the whole shared
 // queue, matching "one shared queue that replaces the group inbox" in the
@@ -56,7 +145,7 @@ router.get('/', asyncHandler(async (req, res) => {
     page = '1', pageSize = '20',
   } = req.query;
 
-  const filter = { archivedAt: null };
+ const filter = buildTicketFilter(req.query);;
   if (status) filter.status = status;
   if (priority) filter.priority = priority;
   if (category) filter.category = category;
