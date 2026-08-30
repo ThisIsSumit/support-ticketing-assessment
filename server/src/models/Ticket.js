@@ -24,7 +24,7 @@ category: { type: String, enum: ['bug', 'billing', 'how_to', 'feature_request', 
   closedAt: { type: Date, default: null },
   archivedAt: { type: Date, default: null },
 }, { timestamps: true });
-
-ticketSchema.index({ subject: 'text', description: 'text' });
+ticketSchema.index({ status: 1, priority: 1, category: 1, primaryAssigneeId: 1 });
+// ticketSchema.index({ subject: 'text', description: 'text' });
 
 module.exports = mongoose.model('Ticket', ticketSchema);
