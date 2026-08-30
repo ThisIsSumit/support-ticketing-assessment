@@ -1,0 +1,4 @@
+"Subject","Status","Priority","Category","Requester","Assignee","Created"
+"Server down","Open","urgent","bug","cust4@x.com","6a93b244c809a54c2e37cd78","2026-08-30T15:42:55.284Z"
+"Refund request","Open","medium","billing","cust2@x.com","6a93b244c809a54c2e37cd78","2026-08-30T13:00:28.530Z"
+"Login button broken","Open","high","bug","cust1@x.com","6a93b244c809a54c2e37cd78","2026-08-30T12:56:38.302Z"
