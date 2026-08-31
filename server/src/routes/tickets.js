@@ -57,6 +57,23 @@ router.patch('/:id/collaborators', loadTicket, requireTicketAccess, asyncHandler
   res.json(req.ticket);
 }));
 
+router.post('/:id/claim', loadTicket, asyncHandler(async (req, res) => {
+  if (req.ticket.primaryAssigneeId) {
+    return res.status(400).json({ error: 'This ticket is already assigned' });
+  }
+  req.ticket.primaryAssigneeId = req.user.sub;
+  req.ticket.status = 'Open';
+  await req.ticket.save();
+  await TicketEvent.create({
+    ticketId: req.ticket._id, type: 'reassignment', actorId: req.user.sub,
+    fromValue: null, toValue: req.user.sub,
+  });
+  await TicketEvent.create({
+    ticketId: req.ticket._id, type: 'status_change', actorId: req.user.sub,
+    fromValue: 'New', toValue: 'Open',
+  });
+  res.json(req.ticket);
+}));
 // Bulk reassign — supervisor only, matching the single-ticket rule.
 router.post('/bulk/reassign', requireRole('supervisor'), asyncHandler(async (req, res) => {
   const { ticketIds, newAssigneeId } = req.body;
