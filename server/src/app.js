@@ -7,6 +7,7 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 const dashboardRoutes = require('./routes/dashboard');
 const alertRoutes = require('./routes/alerts');
+const userRoutes = require('./routes/users');
 app.use(cors({ origin: process.env.CLIENT_ORIGIN, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
@@ -19,4 +20,5 @@ app.use(errorHandler);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/alerts', alertRoutes);
 
+app.use('/api/users', userRoutes);
 module.exports = app;
