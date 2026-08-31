@@ -41,10 +41,21 @@ router.get('/mine',asyncHandler (async (req, res) => {
     archivedAt: null,
     $or: [{ primaryAssigneeId: req.user.sub }, { collaboratorIds: req.user.sub }],
   }).sort({ updatedAt: -1 });
-  res.json(tickets);
+  const withSla = tickets.map((t) => ({ ...t.toObject(), slaStatus: getSlaStatus(t) }));
+  res.json(withSla);
 }));
 
-
+router.patch('/:id/collaborators', loadTicket, requireTicketAccess, asyncHandler(async (req, res) => {
+  const { collaboratorIds } = req.body; // full replacement list, not add/remove deltas
+  const fromValue = req.ticket.collaboratorIds.map((id) => id.toString()).join(',');
+  req.ticket.collaboratorIds = collaboratorIds;
+  await req.ticket.save();
+  await TicketEvent.create({
+    ticketId: req.ticket._id, type: 'reassignment', actorId: req.user.sub,
+    fromValue: fromValue || null, toValue: collaboratorIds.join(','),
+  });
+  res.json(req.ticket);
+}));
 
 // Bulk reassign — supervisor only, matching the single-ticket rule.
 router.post('/bulk/reassign', requireRole('supervisor'), asyncHandler(async (req, res) => {
