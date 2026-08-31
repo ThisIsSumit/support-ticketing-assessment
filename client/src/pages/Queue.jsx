@@ -1,14 +1,16 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { listTickets, listUsers } from '../api/tickets';
+import { listTickets, listUsers, bulkReassign, bulkClose, downloadExport, claimTicket } from '../api/tickets';
 import SlaBadge from '../components/SlaBadge';
 import TicketFormModal from '../components/TicketFormModal';
+import { useAuth } from '../context/AuthContext';
 
 const STATUSES = ['New', 'Open', 'Pending', 'Resolved', 'Closed'];
 const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
 const CATEGORIES = ['bug', 'billing', 'how_to', 'feature_request', 'other'];
 
 export default function Queue() {
+  const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [total, setTotal] = useState(0);
   const [users, setUsers] = useState([]);
@@ -18,11 +20,12 @@ export default function Queue() {
   });
   const [showCreate, setShowCreate] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(new Set());
+  const [bulkResults, setBulkResults] = useState(null);
 
   const load = useCallback(() => {
-    setLoading(true);
     const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== ''));
-    listTickets(params).then(({ tickets, total }) => {
+    return listTickets(params).then(({ tickets, total }) => {
       setTickets(tickets);
       setTotal(total);
       setLoading(false);
@@ -32,14 +35,46 @@ export default function Queue() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => { listUsers().then(setUsers); }, []);
 
-  // Debounce text search so we're not hitting the server on every keystroke.
   useEffect(() => {
     const handle = setTimeout(load, 300);
     return () => clearTimeout(handle);
-  }, [filters.q]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.q]);
 
+  // Single definition. setLoading(true) lives here, in an event handler,
+  // never inside an effect body — that's what the earlier React warning was about.
   function update(key, value) {
+    setLoading(true);
     setFilters((f) => ({ ...f, [key]: value, page: key === 'page' ? value : 1 }));
+  }
+
+  function toggleSelect(id) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  async function handleBulkReassign() {
+    const newAssigneeId = prompt('Reassign selected tickets to which agent ID?');
+    if (!newAssigneeId) return;
+    const { results } = await bulkReassign([...selected], newAssigneeId);
+    setBulkResults(results);
+    setSelected(new Set());
+    load();
+  }
+
+  async function handleBulkClose() {
+    const { results } = await bulkClose([...selected]);
+    setBulkResults(results);
+    setSelected(new Set());
+    load();
+  }
+
+  async function handleClaim(ticketId) {
+    try { await claimTicket(ticketId); load(); }
+    catch (err) { alert(err.response?.data?.error || 'Could not claim ticket.'); }
   }
 
   const agentById = Object.fromEntries(users.map((u) => [u._id, u.name]));
@@ -84,18 +119,49 @@ export default function Queue() {
         </button>
       </div>
 
+      <div className="bulk-toolbar">
+        <span>{selected.size} selected</span>
+        {user.role === 'supervisor' && (
+          <button disabled={selected.size === 0} onClick={handleBulkReassign}>Bulk reassign</button>
+        )}
+        <button disabled={selected.size === 0} onClick={handleBulkClose}>Bulk close</button>
+        <button onClick={() => downloadExport(filters)}>Export CSV</button>
+      </div>
+
+      {bulkResults && (
+        <div className="bulk-results">
+          <h4>Bulk action results</h4>
+          <ul>
+            {bulkResults.map((r) => (
+              <li key={r.ticketId} className={r.success ? 'result-ok' : 'result-fail'}>
+                {r.ticketId}: {r.success ? 'Success' : `Failed — ${r.reason}`}
+              </li>
+            ))}
+          </ul>
+          <button onClick={() => setBulkResults(null)}>Dismiss</button>
+        </div>
+      )}
+
       {loading ? <p>Loading…</p> : (
         <>
           <table className="queue-table">
             <thead>
               <tr>
+                <th></th>
                 <th>Subject</th><th>Status</th><th>Priority</th><th>Category</th>
-                <th>Assignee</th><th>SLA</th><th>Created</th>
+                <th>Assignee</th><th>SLA</th><th>Created</th><th></th>
               </tr>
             </thead>
             <tbody>
               {tickets.map((t) => (
                 <tr key={t._id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(t._id)}
+                      onChange={() => toggleSelect(t._id)}
+                    />
+                  </td>
                   <td><Link to={`/tickets/${t._id}`}>{t.subject}</Link></td>
                   <td>{t.status}</td>
                   <td>{t.priority}</td>
@@ -103,10 +169,11 @@ export default function Queue() {
                   <td>{t.primaryAssigneeId ? (agentById[t.primaryAssigneeId] || '…') : 'Unassigned'}</td>
                   <td><SlaBadge status={t.slaStatus} /></td>
                   <td>{new Date(t.createdAt).toLocaleDateString()}</td>
+                  <td>{!t.primaryAssigneeId && <button onClick={() => handleClaim(t._id)}>Claim</button>}</td>
                 </tr>
               ))}
               {tickets.length === 0 && (
-                <tr><td colSpan={7} className="empty-row">No tickets match these filters.</td></tr>
+                <tr><td colSpan={9} className="empty-row">No tickets match these filters.</td></tr>
               )}
             </tbody>
           </table>
