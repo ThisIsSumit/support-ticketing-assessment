@@ -8,26 +8,26 @@ import MyTickets from './pages/MyTickets';
 import TicketDetail from './pages/TicketDetail';
 import Dashboard from './pages/Dashboard';
 import Alerts from './pages/Alerts';
-import './index.css';
 import { AlertsProvider } from './context/AlertsContext';
+
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <AlertsProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Queue />} />
-             <Route path="/mine" element={<MyTickets />} />   
-              <Route path="/tickets/:id" element={<TicketDetail />} />
-             <Route path="/dashboard" element={<Dashboard />} />
-<Route path="/alerts" element={<Alerts />} />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Queue />} />
+                <Route path="/mine" element={<MyTickets />} />
+                <Route path="/tickets/:id" element={<TicketDetail />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/alerts" element={<Alerts />} />
+              </Route>
             </Route>
-          </Route>
-        </Routes>
-      </AlertsProvider>
+          </Routes>
+        </AlertsProvider>
       </AuthProvider>
     </BrowserRouter>
   );
