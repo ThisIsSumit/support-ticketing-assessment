@@ -23,7 +23,7 @@ export const bulkClose = (ticketIds) =>
   api.post('/tickets/bulk/close', { ticketIds }).then((r) => r.data);
 export const getExportUrl = (filters) => {
   const params = new URLSearchParams(Object.fromEntries(Object.entries(filters).filter(([, v]) => v)));
-  return `${import.meta.env.VITE_API_URL}/tickets/export?${params}`;
+  return `${import.meta.env.API_URL}/tickets/export?${params}`;
 };
 // client/src/api/tickets.js — replace getExportUrl with:
 export const downloadExport = async (filters) => {

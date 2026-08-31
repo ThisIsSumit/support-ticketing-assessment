@@ -70,5 +70,5 @@ Server → Database: Mongoose ODM, single connection pool per server instance.
 
 ## Live URLs
 
-- Frontend: [FILL IN — Vercel URL]
+- Frontend: https://support-ticketing-ten.vercel.app
 - Backend API: [FILL IN — Render URL]

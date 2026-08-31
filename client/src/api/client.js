@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.API_URL,
   withCredentials: true, // sends the httpOnly refresh cookie
 });
 
@@ -33,7 +33,7 @@ api.interceptors.response.use(
       try {
         if (!refreshPromise) {
           refreshPromise = axios
-            .post(`${import.meta.env.VITE_API_URL}/auth/refresh`, {}, { withCredentials: true })
+            .post(`${import.meta.env.API_URL}/auth/refresh`, {}, { withCredentials: true })
             .finally(() => { refreshPromise = null; });
         }
         const { data } = await refreshPromise;
