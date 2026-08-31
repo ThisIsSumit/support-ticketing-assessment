@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/client';
 import SlaBadge from '../components/SlaBadge';
-
+import { useAlerts } from '../context/AlertsContext';
 export default function Alerts() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
-
+const { refresh } = useAlerts();
   function load() {
     setLoading(true);
     api.get('/alerts').then(({ data }) => { setAlerts(data.alerts); setLoading(false); });
@@ -17,6 +17,7 @@ export default function Alerts() {
   async function acknowledge(ticketId) {
     await api.post(`/alerts/${ticketId}/acknowledge`);
     load();
+    refresh();  
   }
 
   if (loading) return <p>Loading…</p>;

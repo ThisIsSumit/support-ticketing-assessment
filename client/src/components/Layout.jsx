@@ -2,11 +2,11 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../api/client';
 import { useAuth } from '../context/useAuth';
+import { useAlerts } from '../context/AlertsContext';
 
 export default function Layout() {
   const { user, logout } = useAuth();
-  const [alertCount, setAlertCount] = useState(0);
-
+  const { count: alertCount } = useAlerts();
   useEffect(() => {
     let interval;
     async function poll() {

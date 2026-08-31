@@ -8,10 +8,13 @@ import MyTickets from './pages/MyTickets';
 import TicketDetail from './pages/TicketDetail';
 import Dashboard from './pages/Dashboard';
 import Alerts from './pages/Alerts';
+import './index.css';
+import { AlertsProvider } from './context/AlertsContext';
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <AlertsProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute />}>
@@ -24,6 +27,7 @@ export default function App() {
             </Route>
           </Route>
         </Routes>
+      </AlertsProvider>
       </AuthProvider>
     </BrowserRouter>
   );
