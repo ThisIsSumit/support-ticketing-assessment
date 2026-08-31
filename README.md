@@ -126,7 +126,7 @@ Use AI tools however you want — to scaffold code, debug a stuck problem, write
 
 You are accountable for everything in your submission. If a reviewer points at a piece of code and asks why it's there, or why it works the way it does, "the AI wrote it" is not an answer.
 
-## Use git properly
+## Use git properly 
 
 Publish to a public GitHub repository, and commit incrementally as the work actually happens — after each meaningful step, not in one pass at the end.
 
