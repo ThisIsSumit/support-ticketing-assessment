@@ -5,7 +5,9 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Queue from './pages/Queue';
 import MyTickets from './pages/MyTickets';
-
+import TicketDetail from './pages/TicketDetail';
+import Dashboard from './pages/Dashboard';
+import Alerts from './pages/Alerts';
 export default function App() {
   return (
     <BrowserRouter>
@@ -15,9 +17,10 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route path="/" element={<Queue />} />
-             <Route path="/mine" element={<MyTickets />} />
-              <Route path="/dashboard" element={<div>Dashboard — session 10</div>} />
-              <Route path="/alerts" element={<div>Alerts — session 10</div>} />
+             <Route path="/mine" element={<MyTickets />} />   
+              <Route path="/tickets/:id" element={<TicketDetail />} />
+             <Route path="/dashboard" element={<Dashboard />} />
+<Route path="/alerts" element={<Alerts />} />
             </Route>
           </Route>
         </Routes>
