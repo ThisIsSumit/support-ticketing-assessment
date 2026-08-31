@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import Queue from './pages/Queue';
+import MyTickets from './pages/MyTickets';
 
 export default function App() {
   return (
@@ -12,8 +14,8 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
-              <Route path="/" element={<div>Queue — session 8</div>} />
-              <Route path="/mine" element={<div>My tickets — session 8</div>} />
+              <Route path="/" element={<Queue />} />
+             <Route path="/mine" element={<MyTickets />} />
               <Route path="/dashboard" element={<div>Dashboard — session 10</div>} />
               <Route path="/alerts" element={<div>Alerts — session 10</div>} />
             </Route>

@@ -8,3 +8,4 @@ export const reassignTicket = (id, newAssigneeId) =>
   api.patch(`/tickets/${id}/reassign`, { newAssigneeId }).then((r) => r.data);
 export const archiveTicket = (id) => api.post(`/tickets/${id}/archive`).then((r) => r.data);
 export const listUsers = () => api.get('/users').then((r) => r.data);
+export const listMyTickets = () => api.get('/tickets/mine').then((r) => r.data);
