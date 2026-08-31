@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const RefreshToken = require('../models/RefreshToken');
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -64,4 +65,8 @@ router.post('/logout', async (req, res) => {
   res.json({ ok: true });
 });
 
+router.get('/me', requireAuth, async (req, res) => {
+  const user = await User.findById(req.user.sub).select('-passwordHash');
+  res.json(user);
+});
 module.exports = router;
