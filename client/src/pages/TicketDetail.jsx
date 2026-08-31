@@ -7,9 +7,9 @@ import {
 import { useAuth } from '../context/useAuth.js';
 import { ALLOWED_TRANSITIONS } from '../constants/statusTransitions';
 import SlaBadge from '../components/SlaBadge';
-import 
+ import TicketEditForm from '../components/TicketEditForm';
 
-export default function TicketDetail() {
+export default  function TicketDetail() {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();

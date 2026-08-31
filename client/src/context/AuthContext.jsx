@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import api, { setAccessToken } from '../api/client';
 
 export const AuthContext = createContext(null);
@@ -19,13 +19,18 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function login(email, password) {
-    const { data } = await api.post('/auth/login', { email, password });
+    const { data } = await api.post('/auth/login', {
+      email,
+      password
+    });
+
     setAccessToken(data.accessToken);
     setUser(data.user);
   }
 
   async function logout() {
     await api.post('/auth/logout');
+
     setAccessToken(null);
     setUser(null);
   }
@@ -35,4 +40,9 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
+}
+
+// Add this
+export function useAuth() {
+  return useContext(AuthContext);
 }

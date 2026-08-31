@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { listTickets, listUsers, bulkReassign, bulkClose, downloadExport, claimTicket } from '../api/tickets';
 import SlaBadge from '../components/SlaBadge';
 import TicketFormModal from '../components/TicketFormModal';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth.js';
 
 const STATUSES = ['New', 'Open', 'Pending', 'Resolved', 'Closed'];
 const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
@@ -120,12 +120,15 @@ export default function Queue() {
       </div>
 
       <div className="bulk-toolbar">
-        <span>{selected.size} selected</span>
-        {user.role === 'supervisor' && (
+           {user.role === 'supervisor' && ( 
+            <>
+            <span>{selected.size} selected</span>
+    
           <button disabled={selected.size === 0} onClick={handleBulkReassign}>Bulk reassign</button>
-        )}
+       
         <button disabled={selected.size === 0} onClick={handleBulkClose}>Bulk close</button>
-        <button onClick={() => downloadExport(filters)}>Export CSV</button>
+        </>
+        )} <button onClick={() => downloadExport(filters)}>Export CSV</button>
       </div>
 
       {bulkResults && (
@@ -152,30 +155,65 @@ export default function Queue() {
                 <th>Assignee</th><th>SLA</th><th>Created</th><th></th>
               </tr>
             </thead>
-            <tbody>
-              {tickets.map((t) => (
-                <tr key={t._id}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(t._id)}
-                      onChange={() => toggleSelect(t._id)}
-                    />
-                  </td>
-                  <td><Link to={`/tickets/${t._id}`}>{t.subject}</Link></td>
-                  <td>{t.status}</td>
-                  <td>{t.priority}</td>
-                  <td>{t.category}</td>
-                  <td>{t.primaryAssigneeId ? (agentById[t.primaryAssigneeId] || '…') : 'Unassigned'}</td>
-                  <td><SlaBadge status={t.slaStatus} /></td>
-                  <td>{new Date(t.createdAt).toLocaleDateString()}</td>
-                  <td>{!t.primaryAssigneeId && <button onClick={() => handleClaim(t._id)}>Claim</button>}</td>
-                </tr>
-              ))}
-              {tickets.length === 0 && (
-                <tr><td colSpan={9} className="empty-row">No tickets match these filters.</td></tr>
-              )}
-            </tbody>
+           
+<tbody>
+  {tickets.map((t) => (
+    <tr key={t._id}>
+      {/* Always reserve checkbox column space */}
+      <td className="checkbox-column">
+        {user.role === 'supervisor' && (
+          <input
+            type="checkbox"
+            checked={selected.has(t._id)}
+            onChange={() => toggleSelect(t._id)}
+          />
+        )}
+      </td>
+
+      <td>
+        <Link to={`/tickets/${t._id}`}>{t.subject}</Link>
+      </td>
+
+      <td>{t.status}</td>
+
+      <td>{t.priority}</td>
+
+      <td>{t.category}</td>
+
+      <td>
+        {t.primaryAssigneeId
+          ? (agentById[t.primaryAssigneeId] || '…')
+          : 'Unassigned'}
+      </td>
+
+      <td>
+        <SlaBadge status={t.slaStatus} />
+      </td>
+
+      <td>
+        {new Date(t.createdAt).toLocaleDateString()}
+      </td>
+
+      <td>
+        {!t.primaryAssigneeId && (
+          <button onClick={() => handleClaim(t._id)}>
+            Claim
+          </button>
+        )}
+      </td>
+    </tr>
+  ))}
+
+  {tickets.length === 0 && (
+    <tr>
+      <td colSpan={9} className="empty-row">
+        No tickets match these filters.
+      </td>
+    </tr>
+  )}
+</tbody>
+
+
           </table>
 
           <div className="pagination">

@@ -49,3 +49,41 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--
 .ticket-edit-form { display: flex; flex-direction: column; gap: 8px; max-width: 480px; background: white; padding: 16px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 12px; }
 .ticket-edit-form label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .ticket-edit-form input, .ticket-edit-form textarea, .ticket-edit-form select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; }
+
+.queue-table {
+  width: 70%;
+  border-collapse: collapse;
+  padding-bottom: 10px;
+}
+
+.queue-table th,
+.queue-table td {
+  padding: 10px 10px;       /* vertical + horizontal spacing */
+  vertical-align: middle;  /* vertically center content */
+  text-align: left;
+
+}
+
+.queue-table th {
+  vertical-align: middle;
+  font-weight: 600;
+}
+
+/* Checkbox column */
+.queue-table th.checkbox-column,
+.queue-table td.checkbox-column {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  padding-left: 10px;
+  padding-right: 10px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Keep buttons/badges vertically centered */
+.queue-table td button,
+.queue-table td input,
+.queue-table td a {
+  vertical-align: middle;
+}
