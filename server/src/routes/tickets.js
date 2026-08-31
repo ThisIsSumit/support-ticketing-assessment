@@ -9,6 +9,7 @@ const { CATEGORIES } = require('../constants/categories');
 const asyncHandler = require('../middleware/asyncHandler');
 const { applyStatusChange } = require('../services/ticketStatus');
 const { buildTicketFilter } = require('../services/ticketQuery');
+const { getSlaStatus } = require('../services/slaClock');
 const router = express.Router();
 router.use(requireAuth);
 
@@ -168,7 +169,8 @@ router.get('/', asyncHandler(async (req, res) => {
     const all = await query.lean();
     all.sort((a, b) => dir * (PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]));
     const paged = all.slice((pageNum - 1) * size, pageNum * size);
-    return res.json({ tickets: paged, total, page: pageNum, pageSize: size });
+    const withSla = paged.map((t) => ({ ...(t.toObject ? t.toObject() : t), slaStatus: getSlaStatus(t) }));
+    return res.json({ tickets: withSla, total, page: pageNum, pageSize: size });
   }
 
   const sortField = SORTABLE_FIELDS[sortBy] || 'createdAt';
@@ -176,8 +178,9 @@ router.get('/', asyncHandler(async (req, res) => {
     .sort({ [sortField]: dir })
     .skip((pageNum - 1) * size)
     .limit(size);
-
-  res.json({ tickets, total, page: pageNum, pageSize: size });
+const withSla = tickets.map((t) => ({ ...(t.toObject ? t.toObject() : t), slaStatus: getSlaStatus(t) }));
+res.json({ tickets: withSla, total, page: pageNum, pageSize: size });
+ 
 }));
 
 router.get('/:id', loadTicket, requireTicketAccess, asyncHandler(async (req, res) => {
