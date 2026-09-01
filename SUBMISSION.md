@@ -7,10 +7,15 @@
 
 ## Notes for the reviewer
 
-[FILL IN — e.g. "Hosted on Render's free tier, which sleeps after 15 minutes
-of inactivity; the first request after a period of idle may take up to a
-minute to wake the server." Also mention here if you kept the MUI redesign
-or not, and anything you know is rough/incomplete.]
+- Backend is on Render's free tier — it sleeps after 15 min idle, so the
+  first request may take up to a minute to wake up.
+- Frontend uses Material UI.
+- Seeded with ~20 tickets across every status/priority/category, including
+  unassigned, resolved, closed (in and out of the reopen window), and a
+  couple currently breaching SLA — not an empty shell.
+- Known trade-offs and edge cases (agent reassignment scope, SLA-on-edit
+  behavior, reopen window default, a couple of scale limitations) are
+  documented in decisions.md and schema.md rather than repeated here.
 
 ## Demo credentials
 
@@ -57,42 +62,56 @@ the priority sort and the SLA-breach count both currently fetch-then-filter
 in JavaScript instead of doing the work in MongoDB. I'd replace both with a
 denormalized numeric priorityRank field (set alongside priority on write)
 and a periodically recomputed currentSlaStatus field, so both become native,
-indexed queries instead of full scans. That's the change I'm most confident
-would matter first if this ever handled real traffic.
+indexed queries instead of full scans.
 
 Second, I'd resolve the SLA-target-on-priority-edit question I left open in
-decisions.md rather than leaving it as a documented ambiguity — right now
-editing a ticket's priority doesn't recompute its SLA target, and while I
-think that's defensible, I never actually built the alternative to compare
-against. I'd implement both behind a small toggle and see which one holds up
-better against a few real scenarios (an urgent ticket wrongly created as
-low, versus a ticket deliberately downgraded after triage) before committing
-to one.
+decisions.md rather than leaving it as a documented ambiguity — I'd
+implement both behaviors behind a toggle and see which holds up better
+against real scenarios before committing to one.
 
-Third, I'd strengthen the audit trail beyond "no route exists to edit it."
-Right now TicketEvent immutability is enforced entirely by omission, which
-is honest but not a real guarantee against direct database access. I'd look
-at either a write-only service credential for the events collection or an
-external append-only log, so "immutable" is actually true at the
-infrastructure level, not just at the application level.
+Third, I'd add a small set of AI-assisted features on top of the data model
+that's already in place, since the ticket/reply/timeline structure is
+already shaped to support them without a schema change:
+- **Auto-categorization on ticket creation** — call an LLM with the subject
+  and description to suggest a category (bug/billing/how_to/feature_request/
+  other) as a pre-filled default the agent can override, rather than a
+  required manual choice every time.
+- **Reply drafting** — given a ticket's description and prior replies,
+  generate a suggested response an agent can edit before sending, using the
+  isInternal/authorType distinction that's already modeled so drafts are
+  clearly marked as suggestions, not sent automatically.
+- **Thread summarization** — for tickets with a long reply history, a
+  one-line AI summary in the queue table or ticket header, so a supervisor
+  scanning dozens of open tickets doesn't have to open each one to see where
+  it stands.
+- **Priority/urgency suggestion** — flag likely-urgent language in a new
+  ticket's description (e.g. "production down," "can't log in," "losing
+  money") as a suggested priority bump, surfaced to the agent rather than
+  auto-applied, since priority directly drives the SLA target and shouldn't
+  be silently overridden by a model.
 
-Fourth, I'd replace the polling-based alerts badge and dashboard with
-websocket pushes (Socket.io or similar) — the 30-second poll was a
-deliberate time-boxed choice, and it works fine for a demo, but it's the
-piece of this app that would feel most obviously dated if compared to a real
-production help-desk tool.
+I'd treat all four as suggestions an agent confirms, not autonomous actions
+— consistent with how the rest of this app treats agent judgment as
+authoritative and the system as support, not replacement. I'd build
+auto-categorization first, since it's the smallest, most self-contained
+addition and reuses the category enum that already exists; reply drafting
+second, since it's the highest-value one but needs more care around not
+sending anything without a human review step.
 
-Lower priority but worth naming: unifying the frontend and backend status-
-transition tables into one shared source of truth instead of two files that
-have to be kept in sync by hand (see below), and cleaning up the
-bulk-reassign flow, which went through a rough prompt()-based version before
-I replaced it with a proper agent-picker modal — I'd want to give the
-claim-from-queue flow the same polish pass, since right now it's a plain
-button with no confirmation step.
+Fourth, I'd strengthen the audit trail beyond "no route exists to edit it"
+— right now TicketEvent immutability is enforced by omission, not by
+infrastructure; I'd move toward a write-only credential or an external
+append-only log so the guarantee is real, not just honest-by-default.
 
-If there were genuinely time left after all of that, I'd pick up a canned-
-response library from the stretch list — it's the stretch idea that fits
-most naturally on top of the reply system that's already built.
+Fifth, I'd replace the polling-based alerts badge and dashboard with
+websocket pushes instead of a 30-second interval — the poll was a
+deliberate time-boxed choice that works for a demo but is the most
+obviously dated piece if compared to a production tool.
+
+Lower priority: unifying the frontend and backend status-transition tables
+into one shared source of truth instead of two hand-maintained copies (see
+below), and giving the claim-from-queue flow the same polish pass the
+bulk-reassign flow got partway through this build.
 
 ## What are you least happy with in this codebase, and why?
 
