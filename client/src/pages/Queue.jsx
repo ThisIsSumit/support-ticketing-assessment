@@ -68,7 +68,7 @@ export default function Queue() {
   const load = useCallback(() => {
     const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== ''));
     return listTickets(params).then(({ tickets, total }) => {
-      
+
       console.log(tickets,total);
       setTickets(tickets);
       setTotal(total);
@@ -401,7 +401,8 @@ export default function Queue() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {!t.primaryAssigneeId && (
+                      
+                      {(user.role === 'agent' && !t.primaryAssigneeId) && (
                         <Button size="small" variant="outlined" onClick={() => handleClaim(t._id)}>
                           Claim
                         </Button>
