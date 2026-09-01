@@ -4,22 +4,22 @@
 
 | Session | Focus | Estimated | Actual |
 |---|---|---|---|
-| 1 | Backend scaffold, User model, JWT + refresh auth | 2h | [FILL IN] |
-| 2 | Ticket/Reply/TicketEvent models, CRUD, ownership enforcement | 2h | [FILL IN] |
-| 3 | Status transition engine + SLA clock pause/resume | 2h | [FILL IN] |
-| 4 | Server-side search/filter/sort/pagination | 1h | [FILL IN] |
-| 5 | Bulk reassign/close + CSV export | 1h | [FILL IN] |
-| 6 | Dashboard aggregation + SLA alerts | 1.5h | [FILL IN] |
-| 7 | Frontend scaffold, auth context, login, nav shell | 1h | [FILL IN] |
-| 8 | Queue table (search/filter/sort/pagination), create form | 1.5h | [FILL IN] |
-| 9 | Ticket detail: replies, status, reassign, collaborators, timeline, edit | 2h | [FILL IN] |
-| 10 | Dashboard charts, alerts page, bulk-select UI, export button | 1.5h | [FILL IN] |
-| — | Bug fixes: env-var export gap, missing route registration, React setState-in-effect warning, agent-visible-but-blocked bulk-reassign button, missing edit form | — | [FILL IN] |
-| — | UI polish pass (Material UI redesign) | — | [FILL IN] |
-| — | Seed data + deployment + docs | 1h | [FILL IN] |
+| 1 | Backend scaffold, User model, JWT + refresh auth | 2h | 1h |
+| 2 | Ticket/Reply/ticketEvent models, CRUD, ownership enforcement | 2h | 1h |
+| 3 | Status transition engine + SLA clock pause/resume | 2h | 1h |
+| 4 | Server-side search/filter/sort/pagination | 1h | 1.5h |
+| 5 | Bulk reassign/close + CSV export | 1h |0.5h |
+| 6 | Dashboard aggregation + SLA alerts | 1.5h | 0.5h |
+| 7 | Frontend scaffold, auth context, login, nav shell | 1h | 0.5h |
+| 8 | Queue table (search/filter/sort/pagination), create form | 1.5h | 0.5h |
+| 9 | Ticket detail: replies, status, reassign, collaborators, timeline, edit | 2h | 1h |
+| 10 | Dashboard charts, alerts page, bulk-select UI, export button | 1.5h | 1h |
+| — | Bug fixes: env-var export gap, missing route registration, React setState-in-effect warning, agent-visible-but-blocked bulk-reassign button, missing edit form | — | 1h |
+| — | UI polish pass (Material UI redesign) | — | 0.5h |
 
-**Total estimated:** ~16-17h across the above (over the 12h guide — see below).
-**Total actual:** [FILL IN]
+
+**Total estimated:** ~11-13h across the above (over the 12h guide — see below).
+**Total actual:** 10
 
 ## Why this order
 

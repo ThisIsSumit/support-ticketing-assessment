@@ -2,8 +2,8 @@
 
 ## Links
 
-- **GitHub repository:** [FILL IN]
-- **Live application:** [FILL IN]
+- **GitHub repository:** https://github.com/ThisIsSumit/support-ticketing-assessment
+- **Live application:** https://support-ticketing-ten.vercel.app/
 
 ## Notes for the reviewer
 
@@ -47,7 +47,7 @@ or not, and anything you know is rough/incomplete.]
 
 ## How much time did you actually spend?
 
-[FILL IN]
+10.5 hrs
 
 ## What would you do next, with another 12 hours?
 
