@@ -337,10 +337,7 @@ export default function Queue() {
                   <TableCell>Assignee</TableCell>
                   <TableCell>SLA</TableCell>
                   <TableCell>Created</TableCell>
-                  {/* only show actions column for agent and supervisor */}
-                  {user?.role === 'agent' && (
-                    <TableCell sx={{ width: 80 }} />
-                  )}
+                 
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -403,14 +400,7 @@ export default function Queue() {
                         {new Date(t.createdAt).toLocaleDateString()}
                       </Typography>
                     </TableCell>
-                    <TableCell>
-                      
-                      {(user.role === 'agent' && !t.primaryAssigneeId) && (
-                        <Button size="small" variant="outlined" onClick={() => handleClaim(t._id)}>
-                          Claim
-                        </Button>
-                      )}
-                    </TableCell>
+                   
                   </TableRow>
                 ))}
 
