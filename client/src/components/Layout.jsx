@@ -15,13 +15,15 @@ import { useAlerts } from '../context/AlertsContext';
 
 const NAV_ITEMS = [
   { label: 'Queue',      to: '/',          end: true },
-  { label: 'My Tickets', to: '/mine' },
+  { label: 'My Tickets', to: '/mine',      agentOnly: true },
   { label: 'Dashboard',  to: '/dashboard' },
 ];
 
 export default function Layout() {
   const { user, logout } = useAuth();
   const { count: alertCount } = useAlerts();
+
+  const visibleNavItems = NAV_ITEMS.filter((item) => !item.agentOnly || user.role === 'agent');
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -40,7 +42,7 @@ export default function Layout() {
 
           {/* Nav links */}
           <Box sx={{ display: 'flex', gap: 0.5 }}>
-            {NAV_ITEMS.map(({ label, to, end }) => (
+            {visibleNavItems.map(({ label, to, end }) => (
               <Button
                 key={to}
                 component={NavLink}
