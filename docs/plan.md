@@ -8,7 +8,7 @@
 | 2 | Ticket/Reply/ticketEvent models, CRUD, ownership enforcement | 2h | 1h |
 | 3 | Status transition engine + SLA clock pause/resume | 2h | 1h |
 | 4 | Server-side search/filter/sort/pagination | 1h | 1.5h |
-| 5 | Bulk reassign/close + CSV export | 1h |0.5h |
+| 5 | Bulk reassign/close + CSV export | 1h |1h |
 | 6 | Dashboard aggregation + SLA alerts | 1.5h | 0.5h |
 | 7 | Frontend scaffold, auth context, login, nav shell | 1h | 0.5h |
 | 8 | Queue table (search/filter/sort/pagination), create form | 1.5h | 0.5h |
