@@ -51,7 +51,12 @@ export default function TicketDetail() {
   const [saving, setSaving]       = useState(false);
 
   const load = useCallback(() => {
-    getTicket(id).then(setData).catch(() => setError('Could not load this ticket.'));
+    getTicket(id).then(setData).catch((err) =>{
+      setError(err.response.data.error);
+      console.log(err.response.data);
+    });
+
+    
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
@@ -66,9 +71,10 @@ export default function TicketDetail() {
 
   const { ticket, replies, events } = data;
   const agentById    = Object.fromEntries(users.map((u) => [u._id, u.name]));
-  const isSupervisor = user.role === 'supervisor';
-  const isAssignee   = ticket.primaryAssigneeId === user.id;
-  const isCollaborator = ticket.collaboratorIds.includes(user.id);
+  const isSupervisor = user?.role === 'supervisor';
+  const userId       = user?._id || user?.id;
+  const isAssignee   = !!(userId && ticket.primaryAssigneeId === userId);
+  const isCollaborator = !!(userId && ticket.collaboratorIds?.includes(userId));
   const canAct       = isSupervisor || isAssignee || isCollaborator;
 
   async function handleStatusChange(newStatus) {

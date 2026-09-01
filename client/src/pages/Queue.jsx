@@ -40,9 +40,9 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 
-const STATUSES    = ['New', 'Open', 'Pending', 'Resolved', 'Closed'];
-const PRIORITIES  = ['low', 'medium', 'high', 'urgent'];
-const CATEGORIES  = ['bug', 'billing', 'how_to', 'feature_request', 'other'];
+const STATUSES = ['New', 'Open', 'Pending', 'Resolved', 'Closed'];
+const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
+const CATEGORIES = ['bug', 'billing', 'how_to', 'feature_request', 'other'];
 
 const STATUS_COLOR = {
   New: 'default', Open: 'primary', Pending: 'warning', Resolved: 'success', Closed: 'default',
@@ -53,21 +53,23 @@ const PRIORITY_COLOR = {
 
 export default function Queue() {
   const { user } = useAuth();
-  const [tickets, setTickets]       = useState([]);
-  const [total, setTotal]           = useState(0);
-  const [users, setUsers]           = useState([]);
-  const [filters, setFilters]       = useState({
+  const [tickets, setTickets] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [users, setUsers] = useState([]);
+  const [filters, setFilters] = useState({
     q: '', status: '', priority: '', category: '', assignee: '',
     sortBy: 'createdAt', sortDir: 'desc', page: 1, pageSize: 10,
   });
   const [showCreate, setShowCreate] = useState(false);
-  const [loading, setLoading]       = useState(true);
-  const [selected, setSelected]     = useState(new Set());
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(new Set());
   const [bulkResults, setBulkResults] = useState(null);
 
   const load = useCallback(() => {
     const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== ''));
     return listTickets(params).then(({ tickets, total }) => {
+      
+      console.log(tickets,total);
       setTickets(tickets);
       setTotal(total);
       setLoading(false);
@@ -105,11 +107,12 @@ export default function Queue() {
   }
 
   const [reassignModalOpen, setReassignModalOpen] = useState(false);
-  const [selectedAgentId, setSelectedAgentId]     = useState('');
-  const [closeConfirmOpen, setCloseConfirmOpen]   = useState(false);
-  const [bulkSubmitting, setBulkSubmitting]       = useState(false);
+  const [selectedAgentId, setSelectedAgentId] = useState('');
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
 
   function handleOpenBulkReassign() {
+    if (user?.role !== 'supervisor') return;
     setSelectedAgentId('');
     setReassignModalOpen(true);
   }
@@ -155,7 +158,7 @@ export default function Queue() {
     catch (err) { alert(err.response?.data?.error || 'Could not claim ticket.'); }
   }
 
-  const agentById  = Object.fromEntries(users.map((u) => [u._id, u.name]));
+  const agentById = Object.fromEntries(users.map((u) => [u._id, u.name]));
   const totalPages = Math.max(Math.ceil(total / filters.pageSize), 1);
   const allSelected = tickets.length > 0 && selected.size === tickets.length;
   const someSelected = selected.size > 0 && selected.size < tickets.length;
@@ -204,6 +207,7 @@ export default function Queue() {
             </Select>
           </FormControl>
 
+
           <FormControl sx={{ minWidth: 140 }}>
             <InputLabel>Assignee</InputLabel>
             <Select label="Assignee" value={filters.assignee} onChange={(e) => update('assignee', e.target.value)}>
@@ -243,11 +247,12 @@ export default function Queue() {
 
       {/* ── Bulk action toolbar ── */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, minHeight: 36 }}>
-        {user.role === 'supervisor' && (
+        {user?.role === 'supervisor' && (
           <>
             <Typography variant="body2" color="text.secondary">
               {selected.size} selected
             </Typography>
+
             <Button
               size="small"
               variant="outlined"
@@ -256,6 +261,7 @@ export default function Queue() {
             >
               Bulk reassign
             </Button>
+
             <Button
               size="small"
               variant="outlined"
@@ -266,6 +272,7 @@ export default function Queue() {
               Bulk close
             </Button>
           </>
+
         )}
         <Box sx={{ flexGrow: 1 }} />
         <Button size="small" variant="text" startIcon={<DownloadIcon />} onClick={() => downloadExport(filters)}>
@@ -311,15 +318,17 @@ export default function Queue() {
             <Table size="small" stickyHeader>
               <TableHead>
                 <TableRow>
-                  {user.role === 'supervisor' && (
-                    <TableCell padding="checkbox" sx={{ width: 40 }}>
-                      <Checkbox
-                        size="small"
-                        indeterminate={someSelected}
-                        checked={allSelected}
-                        onChange={toggleSelectAll}
-                      />
-                    </TableCell>
+                  {user?.role === 'supervisor' && (
+                    <>
+                      <TableCell padding="checkbox" sx={{ width: 40 }}>
+                        <Checkbox
+                          size="small"
+                          indeterminate={someSelected}
+                          checked={allSelected}
+                          onChange={toggleSelectAll}
+                        />
+
+                      </TableCell>  </>
                   )}
                   <TableCell>Subject</TableCell>
                   <TableCell>Status</TableCell>
@@ -339,14 +348,17 @@ export default function Queue() {
                     selected={selected.has(t._id)}
                     sx={{ '&.Mui-selected': { bgcolor: 'primary.50' } }}
                   >
-                    {user.role === 'supervisor' && (
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          size="small"
-                          checked={selected.has(t._id)}
-                          onChange={() => toggleSelect(t._id)}
-                        />
-                      </TableCell>
+                    {user?.role === 'supervisor' && (
+                      <>
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            size="small"
+                            checked={selected.has(t._id)}
+                            onChange={() => toggleSelect(t._id)}
+                          />
+                        </TableCell>
+                      </>
+
                     )}
                     <TableCell>
                       <Link component={RouterLink} to={`/tickets/${t._id}`} underline="hover" color="text.primary">
@@ -400,7 +412,7 @@ export default function Queue() {
 
                 {tickets.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={user.role === 'supervisor' ? 9 : 8} align="center" sx={{ py: 6 }}>
+                    <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
                       <Typography variant="body2" color="text.secondary">
                         No tickets match these filters.
                       </Typography>
@@ -482,52 +494,54 @@ export default function Queue() {
         />
       )}
 
-      {/* ── Bulk Reassign Dialog ── */}
-      <Dialog
-        open={reassignModalOpen}
-        onClose={() => !bulkSubmitting && setReassignModalOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 600 }}>Bulk Reassign Tickets</DialogTitle>
-        <DialogContent dividers>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Reassign <strong>{selected.size}</strong> selected ticket(s) to an agent:
-          </Typography>
-          <FormControl fullWidth size="small">
-            <InputLabel id="bulk-reassign-agent-label">Select Agent</InputLabel>
-            <Select
-              labelId="bulk-reassign-agent-label"
-              label="Select Agent"
-              value={selectedAgentId}
-              onChange={(e) => setSelectedAgentId(e.target.value)}
+      {/* ── Bulk Reassign Dialog (Supervisor only) ── */}
+      {user?.role === 'supervisor' && (
+        <Dialog
+          open={reassignModalOpen}
+          onClose={() => !bulkSubmitting && setReassignModalOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 600 }}>Bulk Reassign Tickets</DialogTitle>
+          <DialogContent dividers>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Reassign <strong>{selected.size}</strong> selected ticket(s) to an agent:
+            </Typography>
+            <FormControl fullWidth size="small">
+              <InputLabel id="bulk-reassign-agent-label">Select Agent</InputLabel>
+              <Select
+                labelId="bulk-reassign-agent-label"
+                label="Select Agent"
+                value={selectedAgentId}
+                onChange={(e) => setSelectedAgentId(e.target.value)}
+              >
+                <MenuItem value="" disabled>
+                  <em>Select an agent…</em>
+                </MenuItem>
+                {users
+                  .filter((u) => u.role === 'agent')
+                  .map((u) => (
+                    <MenuItem key={u._id} value={u._id}>
+                      {u.name} {u.email ? `(${u.email})` : ''}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 1.5 }}>
+            <Button onClick={() => setReassignModalOpen(false)} disabled={bulkSubmitting}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              disabled={!selectedAgentId || bulkSubmitting}
+              onClick={confirmBulkReassign}
             >
-              <MenuItem value="" disabled>
-                <em>Select an agent…</em>
-              </MenuItem>
-              {users
-                .filter((u) => u.role === 'agent')
-                .map((u) => (
-                  <MenuItem key={u._id} value={u._id}>
-                    {u.name} {u.email ? `(${u.email})` : ''}
-                  </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 1.5 }}>
-          <Button onClick={() => setReassignModalOpen(false)} disabled={bulkSubmitting}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            disabled={!selectedAgentId || bulkSubmitting}
-            onClick={confirmBulkReassign}
-          >
-            {bulkSubmitting ? 'Reassigning…' : `Reassign ${selected.size} Ticket(s)`}
-          </Button>
-        </DialogActions>
-      </Dialog>
+              {bulkSubmitting ? 'Reassigning…' : `Reassign ${selected.size} Ticket(s)`}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
 
       {/* ── Bulk Close Confirmation Dialog ── */}
       <Dialog

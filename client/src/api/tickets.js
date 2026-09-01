@@ -1,7 +1,11 @@
 import api from './client';
 
 export const listTickets = (params) => api.get('/tickets', { params }).then((r) => r.data);
-export const getTicket = (id) => api.get(`/tickets/${id}`).then((r) => r.data);
+export const getTicket = (id) => api.get(`/tickets/${id}`).then((r) => r.data).catch((err) => {
+
+  console.log("get ticket error", err.response.data);
+  throw err;
+});
 export const createTicket = (body) => api.post('/tickets', body).then((r) => r.data);
 export const updateTicket = (id, body) => api.patch(`/tickets/${id}`, body).then((r) => r.data);
 export const reassignTicket = (id, newAssigneeId) =>
