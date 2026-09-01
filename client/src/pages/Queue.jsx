@@ -337,7 +337,10 @@ export default function Queue() {
                   <TableCell>Assignee</TableCell>
                   <TableCell>SLA</TableCell>
                   <TableCell>Created</TableCell>
-                  <TableCell sx={{ width: 80 }} />
+                  {/* only show actions column for agent and supervisor */}
+                  {user?.role === 'agent' && (
+                    <TableCell sx={{ width: 80 }} />
+                  )}
                 </TableRow>
               </TableHead>
               <TableBody>
